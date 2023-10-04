@@ -1,4 +1,6 @@
-qdrant_client
+boto3
+botocore
 langchain
+qdrant-client
 uvicorn
 fastapi

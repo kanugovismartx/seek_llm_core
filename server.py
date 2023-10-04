@@ -1,4 +1,3 @@
-import traceback
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import uvicorn
@@ -8,17 +7,43 @@ from langchain.chains import RetrievalQA
 from langchain.llms import OpenAI
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Qdrant
-import os
+import boto3
+from botocore.exceptions import ClientError
+import json
 
-os.environ['QDRANT_HOST'] = "https://c00712ba-0b74-414e-8c35-9f82a5aa1d19.us-east-1-0.aws.cloud.qdrant.io:6333"
-os.environ['QDRANT_API_KEY'] = "-9KWMiKJPb6d1NaCGpeR6-UUdaKSTMWCXo6yAALQMFlrVb61yhJquA"
-os.environ["OPENAI_API_KEY"] = "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"
-os.environ['QDRANT_COLLECTION'] = 'smartx_gen_ai_core_vector_db'
 
-OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
-QDRANT_HOST = os.getenv("QDRANT_HOST")
-QDRANT_API_KEY= os.getenv("QDRANT_API_KEY")
-QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION")
+def get_secrets():
+    secret_name = "smartx_llm_core"
+    region_name = "us-east-1"
+
+    # Create a Secrets Manager client
+    # session = boto3.session.Session(aws_access_key_id='AKIAYAV34GOXBZAXIZEF',
+    # aws_secret_access_key='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')
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    # Decrypts secret using the associated KMS key.
+    return get_secret_value_response['SecretString']
+
+
+secrets = json.loads(get_secrets())
+OPEN_AI_KEY = secrets["OPENAI_API_KEY"]
+QDRANT_HOST = secrets["QDRANT_HOST"]
+QDRANT_API_KEY= secrets["QDRANT_API_KEY"]
+QDRANT_COLLECTION = 'smartx_gen_ai_core_vector_db'
 
 
 app = FastAPI()
@@ -36,14 +61,14 @@ def get_answers(query):
                                                             distance=qdrant_client.http.models.Distance.COSINE
                                                             )
     client.recreate_collection(collection_name=QDRANT_COLLECTION, vectors_config=vectors_config,)
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(openai_api_key=OPEN_AI_KEY)
     vector_store = Qdrant(
                             client=client,
                             collection_name=QDRANT_COLLECTION,
                             embeddings=embeddings
     )
     qa = RetrievalQA.from_chain_type(
-                                    llm=OpenAI(),
+                                    llm=OpenAI(openai_api_key=OPEN_AI_KEY),
                                     chain_type="stuff",
                                     retriever=vector_store.as_retriever()
                                     )
@@ -83,5 +108,3 @@ async def train_item(item: Item):
 if __name__ == "__main__":
     print("Starting Service......")
     uvicorn.run("server:app", host="0.0.0.0", port=8080, reload=True)
-
-

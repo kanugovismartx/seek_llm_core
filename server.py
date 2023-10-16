@@ -12,12 +12,17 @@ from botocore.exceptions import ClientError
 import json
 
 
+AWS_KEY = os.environ.get("aws_key")
+AWS_SECRET = os.environ.get("aws_secret")
+AWS_REGION = "us-east-1"
+
+
 def get_secrets():
     secret_name = "smartx_llm_core"
     region_name = "us-east-1"
 
     # Create a Secrets Manager client
-    session = boto3.session.Session()
+    session = boto3.session.Session(aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET,region_name=AWS_REGION)
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name

@@ -10,6 +10,7 @@ from langchain.vectorstores import Qdrant
 import boto3
 from botocore.exceptions import ClientError
 import json
+import os
 
 
 AWS_KEY = os.environ.get("aws_key")

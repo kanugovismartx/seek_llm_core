@@ -1,5 +1,6 @@
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import urllib.parse
 import uvicorn
 from fastapi import FastAPI
 import qdrant_client
@@ -89,7 +90,8 @@ async def index():
 
 @app.get("/query/{query}")
 async def query_text(query):
-    response = get_answers(query)
+    original_query = urllib.parse.unquote_plus(query)
+    response = get_answers(original_query)
     return {"message": "text received " + query + ", and the " + response}
 
 

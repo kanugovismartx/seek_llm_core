@@ -65,7 +65,7 @@ def get_answers(query):
                                                             size=1536,
                                                             distance=qdrant_client.http.models.Distance.COSINE
                                                             )
-    client.recreate_collection(collection_name=QDRANT_COLLECTION, vectors_config=vectors_config,)
+    #client.recreate_collection(collection_name=QDRANT_COLLECTION, vectors_config=vectors_config,)
     embeddings = OpenAIEmbeddings(openai_api_key=OPEN_AI_KEY)
     vector_store = Qdrant(
                             client=client,

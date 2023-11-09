@@ -57,9 +57,11 @@ app = FastAPI()
 class Item(BaseModel):
     type: str
     payload: str = None
+    collection: str = None
 
 
-def get_answers(query):
+def get_answers(query, collection):
+    QDRANT_COLLECTION = collection
     client = qdrant_client.QdrantClient(url=QDRANT_HOST, api_key=QDRANT_API_KEY,)
     vectors_config = qdrant_client.http.models.VectorParams(
                                                             size=1536,
@@ -106,7 +108,7 @@ async def train_item(item: Item):
         response_body = {"message": message}
         return JSONResponse(content=response_body, status_code=response_code)
 
-    res_msg = get_answers(item.payload)
+    res_msg = get_answers(item.payload, item.collection)
     print(res_msg)
     return JSONResponse(content=res_msg, status_code=response_code)
 

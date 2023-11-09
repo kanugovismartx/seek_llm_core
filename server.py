@@ -62,6 +62,7 @@ class Item(BaseModel):
 
 def get_answers(query, collection):
     QDRANT_COLLECTION = collection
+    print("Collection being used : "+QDRANT_COLLECTION)
     client = qdrant_client.QdrantClient(url=QDRANT_HOST, api_key=QDRANT_API_KEY,)
     vectors_config = qdrant_client.http.models.VectorParams(
                                                             size=1536,

@@ -1,6 +1,6 @@
 boto3
 botocore
-openai
+openai==0.28.1
 tiktoken
 langchain
 qdrant-client
